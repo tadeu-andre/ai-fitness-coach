@@ -1,0 +1,83 @@
+# AI Fitness Coach - .gitignore
+
+# Credenciais e Secrets
+*.env
+.env.local
+.env.*.local
+secrets/
+credentials/
+*.key
+*.pem
+api-keys.txt
+
+# N8N
+.n8n/
+n8n-data/
+*.n8n.backup
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Temporários
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Arquivos de build
+dist/
+build/
+out/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Sistema Operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Vídeos grandes (opcional - remova se quiser commitar o vídeo)
+# video/*.mp4
+# video/*.mov
+# video/*.avi
+
+# Documentos temporários
+*.pdf~
+*.docx~
+
+# Arquivos de teste
+test-*.json
+debug-*.json
+temp-*.html
