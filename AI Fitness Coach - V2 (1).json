@@ -1,0 +1,258 @@
+{
+  "name": "AI Fitness Coach - V2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fitness-working",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "32d5687b-fc16-4368-b786-f46c8d9f8ef5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        192
+      ],
+      "webhookId": "fitness-working"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrair dados da requisição\nconst body = $input.first().json.body || {};\nconst userMessage = body.message || '';\nconst chatHistory = body.history || [];\nconst sessionId = body.session_id || 'session_' + Date.now();\n\nif (!userMessage) {\n  return {\n    error: true,\n    message: 'Mensagem não pode estar vazia'\n  };\n}\n\n// Sistema prompt\nconst systemPrompt = {\n  role: 'system',\n  content: 'Você é um personal trainer virtual amigável chamado FitCoach AI. Ajude o usuário com dicas de treino, nutrição e motivação. Seja conciso e direto. Quando tiver informações suficientes (idade, peso, dias de treino, objetivo), ofereça criar um plano personalizado.'\n};\n\n// Construir histórico de mensagens (limitar a 8 últimas)\nconst messages = [\n  systemPrompt,\n  ...chatHistory.slice(-8),\n  { role: 'user', content: userMessage }\n];\n\nreturn {\n  userMessage,\n  sessionId,\n  messages,\n  chatHistory\n};"
+      },
+      "id": "62cd6bad-7c1e-4e57-8d85-3abb2df3f4d5",
+      "name": "Processar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama-3.3-70b-versatile"
+            },
+            {
+              "name": "temperature",
+              "value": "0.8"
+            },
+            {
+              "name": "max_tokens",
+              "value": "1500"
+            },
+            {
+              "name": "messages",
+              "value": "={{ JSON.stringify($json.messages) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b8a03d9-ba66-4042-ac12-f5bc7265a493",
+      "name": "Groq Temp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "model",
+              "name": "model",
+              "value": "llama-3.3-70b-versatile",
+              "type": "string"
+            },
+            {
+              "id": "temp",
+              "name": "temperature",
+              "value": "={{ 0.8 }}",
+              "type": "number"
+            },
+            {
+              "id": "tokens",
+              "name": "max_tokens",
+              "value": "={{ 1500 }}",
+              "type": "number"
+            },
+            {
+              "id": "msgs",
+              "name": "messages",
+              "value": "={{ $('Processar Mensagem').item.json.messages }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1294507c-c621-44bc-879e-2c4972147ee5",
+      "name": "Preparar Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2880,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"model\": $json.model,\n  \"temperature\": $json.temperature,\n  \"max_tokens\": $json.max_tokens,\n  \"messages\": $json.messages\n}) }}",
+        "options": {}
+      },
+      "id": "973f9bb7-99b9-4c85-a776-f4e1c2d03332",
+      "name": "Chamar Groq",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3088,
+        192
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "cUUsJubtr6puli01",
+          "name": "GroqAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst previousData = $('Processar Mensagem').first().json;\n\nif (!response || !response.choices || !response.choices[0]) {\n  return {\n    success: false,\n    message: 'Erro ao processar resposta da IA',\n    error: true\n  };\n}\n\nconst aiMessage = response.choices[0].message.content;\n\n// Atualizar histórico\nconst newHistory = [\n  ...previousData.chatHistory,\n  { role: 'user', content: previousData.userMessage },\n  { role: 'assistant', content: aiMessage }\n];\n\nreturn {\n  success: true,\n  message: aiMessage,\n  session_id: previousData.sessionId,\n  history: newHistory,\n  timestamp: new Date().toISOString(),\n  tokens_used: response.usage?.total_tokens || 0\n};"
+      },
+      "id": "9514414a-d1e6-48c0-8b08-0edea482ae18",
+      "name": "Formatar Resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3280,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "8674525f-537d-42aa-a3d3-3707c381bacb",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3488,
+        192
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Processar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Preparar Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Request": {
+      "main": [
+        [
+          {
+            "node": "Chamar Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar Groq": {
+      "main": [
+        [
+          {
+            "node": "Formatar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Resposta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "59229e2b-9227-4cdb-aba9-fe8e8a235efc",
+  "meta": {
+    "instanceId": "e63b793b8807da1be764f35b76b25f8bea3f4c556b331c97032ce4641edb2563"
+  },
+  "id": "5xqvByF0GXKTkupc",
+  "tags": []
+}
