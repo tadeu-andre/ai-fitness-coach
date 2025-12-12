@@ -10,6 +10,17 @@
 
 https://www.youtube.com/watch?v=YB7xuAlFBE0
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=YB7xuAlFBE0">
+    <img src="https://img.youtube.com/vi/YB7xuAlFBE0/0.jpg" width="600">
+  </a>
+</p>
+
+<p align="center">
+  ▶️ Clique na imagem para assistir à demonstração
+</p>
+
+
 ## 📋 Índice
 - [Sobre o Projeto](#sobre-o-projeto)
 - [Funcionalidades](#funcionalidades)
