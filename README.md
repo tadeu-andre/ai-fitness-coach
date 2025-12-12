@@ -6,8 +6,11 @@
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3-6B46C1)](https://groq.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 📋 Índice
+## [VIDEO DE APRESENTAÇÃO](#video-de-apresentacao)
 
+https://www.youtube.com/watch?v=YB7xuAlFBE0
+
+## 📋 Índice
 - [Sobre o Projeto](#sobre-o-projeto)
 - [Funcionalidades](#funcionalidades)
 - [Arquitetura](#arquitetura)
